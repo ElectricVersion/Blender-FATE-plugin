@@ -6,18 +6,37 @@ UINT16 = {"format": "H", "size": 2}
 SINT16 = {"format": "h", "size": 2}
 FLOAT  = {"format": "f", "size": 4}
 
+class ModelData:
+    textureNames = {}
+    materialNames = {}
+    userData = {}
+    vertices = []
+    
+    modelScale = 1.0
+    objectCount = 0
+    lightsCount = 0
+    pointsCount = 0
+    pathsCount = 0
+    materialCount = 0
+    textureCount = 0
+    totalVertexCount = 0
+    
+    def __init__(self):
+        return
+
 class Reader:
     filePosition = 0
-    data = None
+    txtData = None
+    mdlData = ModelData()
     
     def __init__(self, p_input):
         self.filePosition = 0
-        self.data = p_input
+        self.txtData = p_input
         
     def read_num(self, p_type = UINT32):
         output = []
         for i in range (0, p_type["size"]):
-            output.append(self.data[self.filePosition + i])
+            output.append(self.txtData[self.filePosition + i])
         
         self.filePosition += p_type["size"]
         output = struct.unpack(p_type["format"], bytes(output))[0]
@@ -29,7 +48,7 @@ class Reader:
         output = ""
         currentChar = None
         while currentChar != p_delim:
-            currentChar = bytes([self.data[self.filePosition]]).decode("utf-8")
+            currentChar = bytes([self.txtData[self.filePosition]]).decode("utf-8")
             output += currentChar
             self.filePosition += 1
         print("Read string: " + output)

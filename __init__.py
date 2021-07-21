@@ -1,8 +1,11 @@
 import bpy
 from io_fate_mdl.util import *
 from io_fate_mdl.read_material import *
+from io_fate_mdl.read_mesh import *
+import bmesh
 
 from bpy_extras.io_utils import ImportHelper
+from bpy_extras.object_utils import AddObjectHelper
 from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
 
@@ -43,18 +46,35 @@ class ImportMDL(Operator, ImportHelper):
     )
 
     def execute(self, context):
-        return read_mdl_file(context, self.filepath)
+        return self.read_mdl_file(context, self.filepath)
+        
+    def read_mdl_file(self, context, filepath):
+        print("Loading MDL file.")
+        f = open(filepath, 'rb')
+        data = f.read()
+        f.close()
+        #load the data
+        
+        reader = util.Reader(data)
+        read_mesh.read_basic_info(reader)
+        read_material.read_material_section(reader)
+        read_mesh.read_mesh_section(reader)
+        
+        mesh = bpy.data.meshes.new("Untitled FATE Object")
+        
+        bm = bmesh.new()
 
-def read_mdl_file(context, filepath):
-    print("Loading MDL file.")
-    f = open(filepath, 'rb')
-    data = f.read()
-    f.close()
-    #load the data
-    
-    r = util.Reader(data)
-    read_material.read_material_section(r)
-    
-    #print(data)
-
-    return {'FINISHED'}
+        for v in reader.mdlData.vertices:
+            bm.verts.new(v)
+        
+        bm.verts.ensure_lookup_table()
+        faces = []
+        
+        bm.to_mesh(mesh)
+        mesh.update()
+        
+        # add the mesh as an object into the scene with this utility module
+        from bpy_extras import object_utils
+        object_utils.object_data_add(context, mesh)
+        
+        return {'FINISHED'}

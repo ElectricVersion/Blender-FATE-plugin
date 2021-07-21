@@ -16,18 +16,6 @@ MATERIAL_SPHEREMAPPOST = 12
 MATERIAL_TYPES = 13
 
 def read_material_section(rdr):    
-    textureNames = {}
-    materialNames = {}
-    userData = {}
-    
-    modelScale = rdr.read_num(FLOAT)
-    objectCount = rdr.read_num(UINT32)
-    lightsCount = rdr.read_num(UINT32)
-    pointsCount = rdr.read_num(UINT32)
-    pathsCount = rdr.read_num(UINT32)
-    materialCount = rdr.read_num(UINT32)
-    textureCount = rdr.read_num(UINT32)
-    
     materialReferences = {}
     materialHasColorKey = {}
     materialColorKey = {}
@@ -38,12 +26,12 @@ def read_material_section(rdr):
     materialType = {}
     
     # parse texture names
-    for i in range(textureCount):
+    for i in range(rdr.mdlData.textureCount):
         texturePath = rdr.read_str().upper()
         textureId = rdr.read_num(SINT32)
-        textureNames[textureId] = texturePath
+        rdr.mdlData.textureNames[textureId] = texturePath
     # load each material
-    for i in range(materialCount):
+    for i in range(rdr.mdlData.materialCount):
         duplicate = None
         opacity = None
         doubleSided = None
@@ -68,7 +56,7 @@ def read_material_section(rdr):
         shiftV2 = None
         flipbookTime2 = None
 
-        materialNames[i] = rdr.read_str()
+        rdr.mdlData.materialNames[i] = rdr.read_str()
         materialId = rdr.read_num(SINT32)
         doubleSided = rdr.read_num(SINT32)
         materialIsCollideable[materialId] = rdr.read_num(SINT32)
@@ -155,9 +143,3 @@ def read_material_section(rdr):
         #it assembles texture paths or something
         
         #skip to parsing objects
-        for i in range(objectCount):
-            pivotX = rdr.read_num(FLOAT) * modelScale
-            pivotY = rdr.read_num(FLOAT) * modelScale
-            pivotZ = rdr.read_num(FLOAT) * modelScale
-            vertexCount = rdr.read_num(SINT32) * modelScale
-        
