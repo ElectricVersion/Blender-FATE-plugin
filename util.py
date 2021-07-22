@@ -5,12 +5,17 @@ SINT32 = {"format": "l", "size": 4}
 UINT16 = {"format": "H", "size": 2}
 SINT16 = {"format": "h", "size": 2}
 FLOAT  = {"format": "f", "size": 4}
+BYTE  = {"format": "b", "size": 1}
 
 class ModelData:
     textureNames = {}
     materialNames = {}
     userData = {}
     vertices = []
+    triangles = []
+    uvs = []
+    normals = []
+    vertexColors = []
     
     modelScale = 1.0
     objectCount = 0
@@ -20,6 +25,7 @@ class ModelData:
     materialCount = 0
     textureCount = 0
     totalVertexCount = 0
+    totalTriangleCount = 0
     
     def __init__(self):
         return
@@ -35,7 +41,7 @@ class Reader:
         
     def read_num(self, p_type = UINT32):
         output = []
-        for i in range (0, p_type["size"]):
+        for i in range(p_type["size"]):
             output.append(self.txtData[self.filePosition + i])
         
         self.filePosition += p_type["size"]

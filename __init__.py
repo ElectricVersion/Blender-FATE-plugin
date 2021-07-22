@@ -63,12 +63,21 @@ class ImportMDL(Operator, ImportHelper):
         mesh = bpy.data.meshes.new("Untitled FATE Object")
         
         bm = bmesh.new()
-
+        
+        print(reader.mdlData.totalVertexCount)
+        print(len(reader.mdlData.vertices))
+        
+        #print(reader.mdlData.vertices)
         for v in reader.mdlData.vertices:
             bm.verts.new(v)
-        
         bm.verts.ensure_lookup_table()
-        faces = []
+        bm.verts.index_update()
+
+        print(reader.mdlData.triangles)
+        for f in reader.mdlData.triangles:
+            print([bm.verts[i] for i in f])
+            bm.faces.new([bm.verts[i] for i in f])
+        
         
         bm.to_mesh(mesh)
         mesh.update()

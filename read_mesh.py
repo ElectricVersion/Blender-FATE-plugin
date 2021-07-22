@@ -11,11 +11,15 @@ def read_basic_info(rdr):
 
 def read_mesh_section(rdr):
         vertexReferences = []
-        
+        uvReferences = []
+        normalReferences = []
         for i in range(rdr.mdlData.objectCount):
+            uvsLoaded = len(rdr.mdlData.uvs)
+            vertexReferencesLoaded = len(vertexReferences)
             pivotX = rdr.read_num(FLOAT) * rdr.mdlData.modelScale
             pivotY = rdr.read_num(FLOAT) * rdr.mdlData.modelScale
             pivotZ = rdr.read_num(FLOAT) * rdr.mdlData.modelScale
+            #vertices
             vertexCount = rdr.read_num(SINT32) # just for this submesh
             rdr.mdlData.totalVertexCount += vertexCount
             for j in range(vertexCount):
@@ -26,3 +30,60 @@ def read_mesh_section(rdr):
                 y = (pivotY + rdr.read_num(FLOAT)) * rdr.mdlData.modelScale
                 z = (pivotZ + rdr.read_num(FLOAT)) * rdr.mdlData.modelScale
                 rdr.mdlData.vertices.append( (x,y,z) )
+            #uvs
+            hasUvs = rdr.read_num(SINT16)
+            for j in range(vertexCount):
+                uvIndex = 0
+                if (hasUvs):
+                    uvIndex = rdr.read_num(UINT32) + uvsLoaded
+                uvReferences.append(uvIndex)
+            actualUvCount = 1
+            if hasUvs == 1:
+                actualUvCount = rdr.read_num(SINT32)
+                for j in range(actualUvCount):
+                    u = rdr.read_num(FLOAT)
+                    v = rdr.read_num(FLOAT)
+                    rdr.mdlData.uvs.append( (u, v) )
+            else:
+                for j in range(actualUvCount):
+                    rdr.mdlData.uvs.append( (0.0, 0.0) )
+            #normals
+            hasNormals = rdr.read_num(SINT16)
+            print("HAS NORMALS? " + str(hasNormals))
+            if hasNormals > 0:
+                for j in range(vertexCount):
+                    normalReferences.append( rdr.read_num(UINT32) + len(rdr.mdlData.normals))
+                actualNormalCount = rdr.read_num(UINT32)
+                print("ACTUAL NORMAL COUNT" + str(actualNormalCount))
+                for j in range(actualNormalCount):
+                    au = rdr.read_num(BYTE)
+                    av = rdr.read_num(BYTE)
+                    rdr.mdlData.normals.append( ((au, av), (au, av), (au, av)) ) # im not sure how to "decompress" these yet but i think i need to
+            else:
+                if len(rdr.mdlData.normals) == 0:
+                    rdr.mdlData.normals.append( (0,1,0) )
+                for j in range(vertexCount):
+                    normalReferences.append( len(rdr.mdlData.normals) - 1)
+            #vertex colors
+            actualVertexColorCount = rdr.read_num(SINT32)
+            for j in range(vertexCount):
+                if j >= actualVertexColorCount:
+                    rdr.mdlData.vertexColors.append( (1, 1, 1) )
+                else:
+                    r = rdr.read_num(UINT16)
+                    g = rdr.read_num(UINT16)
+                    b = rdr.read_num(UINT16)
+                    rdr.mdlData.vertexColors.append( (r, g, b) )
+            rdr.mdlData.totalTriangleCount = rdr.read_num(UINT32)
+            print("TOTAL TRI COUNT" + str(rdr.mdlData.totalTriangleCount))
+            submeshCount = rdr.read_num(UINT32)
+            print("SUBMESH COUNT" + str(submeshCount))
+            for j in range(submeshCount):
+                materialId = rdr.read_num(SINT16)
+                actualTriangleCount = rdr.read_num(UINT32)
+                print("TRI COUNT" + str(actualTriangleCount))
+                for k in range(actualTriangleCount):
+                    a = vertexReferences[rdr.read_num(UINT32) + vertexReferencesLoaded]
+                    b =  vertexReferences[rdr.read_num(UINT32) + vertexReferencesLoaded]
+                    c = vertexReferences[rdr.read_num(UINT32) + vertexReferencesLoaded]
+                    rdr.mdlData.triangles.append( (a, b, c) )
