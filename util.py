@@ -7,15 +7,25 @@ SINT16 = {"format": "h", "size": 2}
 FLOAT  = {"format": "f", "size": 4}
 BYTE  = {"format": "b", "size": 1}
 
+class VertexData:
+    references = []
+    uvPos = []
+    pos = None
+    def __init__(self):
+        return
+
+
 class ModelData:
     textureNames = {}
     materialNames = {}
     userData = {}
+    uvs = []
     vertices = []
     triangles = []
-    uvs = []
     normals = []
     vertexColors = []
+    uvReferences = []
+    vertexReferences = []
     
     modelScale = 1.0
     objectCount = 0
