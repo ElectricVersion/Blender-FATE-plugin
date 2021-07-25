@@ -8,12 +8,10 @@ FLOAT  = {"format": "f", "size": 4}
 BYTE  = {"format": "b", "size": 1}
 
 class VertexData:
-    references = []
-    uvPos = []
-    pos = None
     def __init__(self):
-        return
-
+        self.references = []
+        self.uvPos = []
+        self.pos = None
 
 class ModelData:
     textureNames = {}

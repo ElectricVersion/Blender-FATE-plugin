@@ -65,12 +65,12 @@ class ImportMDL(Operator, ImportHelper):
         bm = bmesh.new()
         
         #print(reader.mdlData.vertices)
-        
         vertices = {}
         for i in range(len(reader.mdlData.vertexReferences)):
             v = reader.mdlData.vertexReferences[i]
+            #print(v)
             v2 = reader.mdlData.uvReferences[i]
-            if not (v in vertices):
+            if v not in vertices:
                 vertices[v] = VertexData()
                 vertices[v].pos = reader.mdlData.vertices[v]
             vertices[v].uvPos.append(reader.mdlData.uvs[v2])
@@ -78,7 +78,6 @@ class ImportMDL(Operator, ImportHelper):
         
         for i in range(len(vertices)):
             vert = bm.verts.new(vertices[i].pos)
-         
         bm.verts.index_update()
         bm.verts.ensure_lookup_table()
 
@@ -89,12 +88,12 @@ class ImportMDL(Operator, ImportHelper):
         for f in bm.faces:
             for loop in f.loops:
                 loop_uv = loop[uv_layer]
-                loop_uv.uv = vertices[loop.vert.index].uvPos.pop(0)
+                currentVert = vertices[loop.vert.index]
+                loop_uv.uv = currentVert.uvPos.pop(0)
 
         
         bm.to_mesh(mesh)
         mesh.update()
-        
         
         # add the mesh as an object into the scene with this utility module
         from bpy_extras import object_utils
