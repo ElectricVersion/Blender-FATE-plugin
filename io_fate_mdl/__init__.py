@@ -5,6 +5,7 @@ from io_fate_mdl.read_mesh import *
 import bmesh
 
 from bpy_extras.io_utils import ImportHelper
+from bpy_extras.io_utils import ExportHelper
 from bpy_extras.object_utils import AddObjectHelper
 from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
@@ -30,6 +31,29 @@ def unregister():
 
 def menu_func_import(self, context):
     self.layout.operator(ImportMDL.bl_idname, text="Import FATE model")
+
+class ExporttMDL(Operator, ExportHelper):
+    """Import FATE model (.mdl)"""
+    bl_idname = "export_mdl.mdl_data"
+    bl_label = "Export FATE MDL"
+
+    filename_ext = ".mdl"
+
+    filter_glob: StringProperty(
+        default="*.mdl",
+        options={'HIDDEN'},
+        maxlen=255,  # Max internal buffer length, longer would be clamped.
+    )
+
+    def execute(self, context):
+        return self.write_mdl_file(context, self.filepath)
+        
+    def write_mdl_file(self, context, filepath):
+        print("Saving MDL file.")
+        #first we make a bytes object of the file contents
+        writer = util.Writer(context)
+        
+        return {'FINISHED'}
 
 class ImportMDL(Operator, ImportHelper):
     """Import FATE model (.mdl)"""
@@ -68,7 +92,7 @@ class ImportMDL(Operator, ImportHelper):
         vertices = {}
         for i in range(len(reader.mdlData.vertexReferences)):
             v = reader.mdlData.vertexReferences[i]
-            #print(v)
+            print("V = " + str(v))
             v2 = reader.mdlData.uvReferences[i]
             if v not in vertices:
                 vertices[v] = VertexData()
@@ -80,9 +104,13 @@ class ImportMDL(Operator, ImportHelper):
             vert = bm.verts.new(vertices[i].pos)
         bm.verts.index_update()
         bm.verts.ensure_lookup_table()
-
+        
+        print(len(vertices))
+        print(len(reader.mdlData.triangles))
         for f in reader.mdlData.triangles:
-            bm.faces.new([bm.verts[i] for i in f])
+            faceVerts = [bm.verts[i] for i in f]
+            if bm.faces.get(faceVerts) == None:
+                bm.faces.new(faceVerts)
         
         uv_layer = bm.loops.layers.uv.verify()
         for f in bm.faces:
@@ -95,6 +123,7 @@ class ImportMDL(Operator, ImportHelper):
         bm.to_mesh(mesh)
         mesh.update()
         
+        bm.free()
         # add the mesh as an object into the scene with this utility module
         from bpy_extras import object_utils
         object_utils.object_data_add(context, mesh)

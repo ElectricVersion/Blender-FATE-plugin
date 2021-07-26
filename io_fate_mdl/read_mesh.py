@@ -13,6 +13,7 @@ def read_mesh_section(rdr):
         normalReferences = []
         for i in range(rdr.mdlData.objectCount):
             uvsLoaded = len(rdr.mdlData.uvs)
+            verticesLoaded = len(rdr.mdlData.vertices)
             vertexReferencesLoaded = len(rdr.mdlData.vertexReferences)
             pivotX = rdr.read_num(FLOAT) * rdr.mdlData.modelScale
             pivotY = rdr.read_num(FLOAT) * rdr.mdlData.modelScale
@@ -21,14 +22,13 @@ def read_mesh_section(rdr):
             vertexCount = rdr.read_num(SINT32) # just for this submesh
             rdr.mdlData.totalVertexCount += vertexCount
             for j in range(vertexCount):
-                rdr.mdlData.vertexReferences.append(rdr.read_num(UINT32))
+                rdr.mdlData.vertexReferences.append(rdr.read_num(UINT32) + verticesLoaded)
             actualVertexCount = rdr.read_num(SINT32) # not sure what an "actual" vertex means here, but thats what the code refers to it as
             for j in range(actualVertexCount):
                 x = (pivotX + rdr.read_num(FLOAT)) * rdr.mdlData.modelScale
                 y = (pivotY + rdr.read_num(FLOAT)) * rdr.mdlData.modelScale
                 z = (pivotZ + rdr.read_num(FLOAT)) * rdr.mdlData.modelScale
                 rdr.mdlData.vertices.append( (x,y,z) )
-            
             #uvs
             hasUvs = rdr.read_num(SINT16)
             for j in range(vertexCount):
@@ -39,7 +39,7 @@ def read_mesh_section(rdr):
             actualUvCount = 1
             if hasUvs == 1:
                 actualUvCount = rdr.read_num(SINT32)
-                print("ACTUALUVCOUNT" + str(actualUvCount))
+                print("ACTUALUVCOUNT " + str(actualUvCount))
                 for j in range(actualUvCount):
                     u = rdr.read_num(FLOAT)
                     v = rdr.read_num(FLOAT)
@@ -55,7 +55,7 @@ def read_mesh_section(rdr):
                 for j in range(vertexCount):
                     normalReferences.append( rdr.read_num(UINT32) + len(rdr.mdlData.normals))
                 actualNormalCount = rdr.read_num(UINT32)
-                print("ACTUAL NORMAL COUNT" + str(actualNormalCount))
+                print("ACTUAL NORMAL COUNT " + str(actualNormalCount))
                 for j in range(actualNormalCount):
                     au = rdr.read_num(BYTE)
                     av = rdr.read_num(BYTE)
@@ -75,14 +75,15 @@ def read_mesh_section(rdr):
                     g = rdr.read_num(UINT16)
                     b = rdr.read_num(UINT16)
                     rdr.mdlData.vertexColors.append( (r, g, b) )
-            rdr.mdlData.totalTriangleCount = rdr.read_num(UINT32)
-            print("TOTAL TRI COUNT" + str(rdr.mdlData.totalTriangleCount))
+            totalTriangleCount = rdr.read_num(UINT32)
+            print("TOTAL TRI COUNT " + str(rdr.mdlData.totalFaceCount))
             submeshCount = rdr.read_num(UINT32)
-            print("SUBMESH COUNT" + str(submeshCount))
+            print("SUBMESH COUNT " + str(submeshCount))
             for j in range(submeshCount):
                 materialId = rdr.read_num(SINT16)
                 actualTriangleCount = rdr.read_num(UINT32)
-                print("TRI COUNT" + str(actualTriangleCount))
+                rdr.mdlData.totalFaceCount += actualTriangleCount
+                print("SUBMESH TRI COUNT " + str(actualTriangleCount))
                 for k in range(actualTriangleCount):
                     a = rdr.mdlData.vertexReferences[rdr.read_num(UINT32) + vertexReferencesLoaded]
                     b =  rdr.mdlData.vertexReferences[rdr.read_num(UINT32) + vertexReferencesLoaded]
