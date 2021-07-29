@@ -21,10 +21,14 @@ class ModelData:
         self.uvs = []
         self.vertices = []
         self.triangles = []
+        self.materials = []
+        self.textures = []
         self.normals = []
         self.vertexColors = []
         self.uvReferences = []
         self.vertexReferences = []
+        
+        self.activeObject = None
         
         self.modelScale = 1.0
         self.objectCount = 0
@@ -68,13 +72,15 @@ class Writer:
     def __init__(self, p_context):
         self.txtData = bytes([])
         self.context = p_context
+        self.mdlData = ModelData()
         
     def write_num(self, p_input, p_type = UINT32):
         output = struct.pack(p_type["format"], p_input)
         self.txtData += output
         print("Wrote " + str(p_type["size"]) + " bytes: " + str(output))
     
-    def write_str(self, p_input, p_delim = '\0'):
+    def write_str(self, p_input):
+        p_input += "\0"
         output = p_input.encode("utf-8")
         self.txtData += output
-        print("Wrote string: " + output)
+        print("Wrote string: " + str(output))

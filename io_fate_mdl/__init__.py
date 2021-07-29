@@ -2,6 +2,8 @@ import bpy
 from io_fate_mdl.util import *
 from io_fate_mdl.read_material import *
 from io_fate_mdl.read_mesh import *
+from io_fate_mdl.write_mesh import *
+from io_fate_mdl.write_material import *
 import bmesh
 
 from bpy_extras.io_utils import ImportHelper
@@ -23,16 +25,23 @@ bl_info = {
 def register():
     bpy.utils.register_class(ImportMDL)
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
-
+    bpy.utils.register_class(ExportMDL)
+    bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
 
 def unregister():
     bpy.utils.unregister_class(ImportMDL)
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
+    bpy.utils.unregister_class(ExportMDL)
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
 
 def menu_func_import(self, context):
     self.layout.operator(ImportMDL.bl_idname, text="Import FATE model")
 
-class ExporttMDL(Operator, ExportHelper):
+def menu_func_export(self, context):
+    self.layout.operator(ExportMDL.bl_idname, text="Export FATE model")
+
+
+class ExportMDL(Operator, ExportHelper):
     """Import FATE model (.mdl)"""
     bl_idname = "export_mdl.mdl_data"
     bl_label = "Export FATE MDL"
@@ -52,6 +61,14 @@ class ExporttMDL(Operator, ExportHelper):
         print("Saving MDL file.")
         #first we make a bytes object of the file contents
         writer = util.Writer(context)
+        
+        write_mesh.write_basic_info(writer)
+        write_material.write_material_section(writer)
+        write_mesh.write_mesh_section(writer)
+        
+        f = open(filepath, 'wb')
+        f.write(writer.txtData)
+        f.close()
         
         return {'FINISHED'}
 
