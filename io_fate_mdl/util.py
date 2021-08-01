@@ -1,11 +1,12 @@
 import struct
+import math
 
 UINT32 = {"format": "L", "size": 4}
 SINT32 = {"format": "l", "size": 4}
 UINT16 = {"format": "H", "size": 2}
 SINT16 = {"format": "h", "size": 2}
 FLOAT  = {"format": "f", "size": 4}
-BYTE  = {"format": "b", "size": 1}
+BYTE  = {"format": "B", "size": 1}
 
 class VertexData:
     def __init__(self):
@@ -84,3 +85,13 @@ class Writer:
         output = p_input.encode("utf-8")
         self.txtData += output
         print("Wrote string: " + str(output))
+        
+def compress_normal(p_normal, component):
+    multiplier = (3.14159 / 255.0) * 2.0
+    if component == 0: #x
+        return round(math.asin(p_normal)/multiplier) 
+    if component == 1: # z
+        return 127 - round(math.atan(p_normal)/multiplier) # = AV
+    if component == 2: #y
+        return round(math.acos(p_normal)/multiplier) # = AU
+    return 0

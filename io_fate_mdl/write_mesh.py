@@ -35,7 +35,9 @@ def write_mesh_section(wtr):
         meshObject = wtr.mdlData.activeObject.to_mesh(preserve_all_data_layers=True)
         vertices = meshObject.vertices.values()
         
+        normalReferences = []
         vertexReferences = []
+        normalReferences = []
         uvReferences = []
         uvLoops = meshObject.uv_layers.active.data.values()
         uvs = []
@@ -71,7 +73,21 @@ def write_mesh_section(wtr):
         for j in uvs:
             for k in j:
                 wtr.write_num(k, FLOAT)
-        wtr.write_num(0, UINT16) # has normals? (no temporarily)
+        
+        hasNormals = 1
+        wtr.write_num(hasNormals, UINT16) # has normals? (yes)
+        if hasNormals > 0:
+            for j in vertexReferences:
+                wtr.write_num(j)
+            actualNormalCount = len(vertices)
+            wtr.write_num(actualNormalCount, UINT32)
+            for j in range(actualNormalCount):
+                blenderNormal = vertices[j].normal # the normal stored by blender
+                au = compress_normal(blenderNormal[1], 2)
+                av = compress_normal(blenderNormal[2], 1)
+                print("NORMAL " + str(blenderNormal))
+                wtr.write_num(au, BYTE)
+                wtr.write_num(av, BYTE)
         wtr.write_num(0, UINT32) # vertex color count (none temporarily)
         
         #triangles
