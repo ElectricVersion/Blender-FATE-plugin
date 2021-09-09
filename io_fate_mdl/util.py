@@ -13,8 +13,24 @@ class VertexData:
         self.references = []
         self.uvPos = []
         self.pos = None
+        self.bones = []
+        self.boneOffsets = {}
+        self.boneWeights = {}
 
-class ModelData:
+class BoneData:
+    def __init__(self):
+        self.parent = None
+        self.name = ""
+        self.transform = None
+        self.pos = None
+        self.localPos = None
+        self.localTransform = None
+        self.vertices = []
+        self.vertexOffsets = []
+        self.vertexWeights = []
+        self.children = []
+
+class ModelData: # used for both SMS and MDL files since they have similar formats
     def __init__(self):
         self.textureNames = {}
         self.materialNames = {}
@@ -40,6 +56,14 @@ class ModelData:
         self.textureCount = 0
         self.totalVertexCount = 0
         self.totalFaceCount = 0
+        
+        #SMS stuff
+        self.tagCount = 0
+        self.version = ""
+        self.tagNames = []
+        self.tagUserData = []
+        self.bones = []
+        self.vertexDict = {}
         return
 
 class Reader:
@@ -63,6 +87,16 @@ class Reader:
         output = ""
         currentChar = None
         while currentChar != p_delim:
+            currentChar = bytes([self.txtData[self.filePosition]]).decode("utf-8")
+            output += currentChar
+            self.filePosition += 1
+        print("Read string: " + output)
+        return output
+        
+    def read_block(self, p_len):
+        output = ""
+        currentChar = None
+        for i in range(p_len):
             currentChar = bytes([self.txtData[self.filePosition]]).decode("utf-8")
             output += currentChar
             self.filePosition += 1
