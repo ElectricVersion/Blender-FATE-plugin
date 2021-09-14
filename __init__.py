@@ -1,11 +1,11 @@
 import bpy
-from io_fate_mdl.util import *
-from io_fate_mdl.read_material import *
-from io_fate_mdl.read_mesh import *
-from io_fate_mdl.read_sms_mesh import *
-from io_fate_mdl.read_sms_material import *
-from io_fate_mdl.write_mesh import *
-from io_fate_mdl.write_material import *
+from .util import *
+from .read_material import *
+from .read_mesh import *
+from .read_sms_mesh import *
+from .read_sms_material import *
+from .write_mesh import *
+from .write_material import *
 import bmesh
 
 from bpy_extras.io_utils import ImportHelper

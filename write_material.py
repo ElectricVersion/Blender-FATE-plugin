@@ -1,4 +1,4 @@
-from io_fate_mdl.util import *
+from .util import *
 import bpy
 import bpy.types
 

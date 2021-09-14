@@ -1,4 +1,4 @@
-from io_fate_mdl.util import *
+from .util import *
 
 def read_basic_info(rdr):
     rdr.mdlData.modelScale = rdr.read_num(FLOAT)

@@ -1,4 +1,4 @@
-from io_fate_mdl.util import *
+from .util import *
 
 MATERIAL_STANDARD = 0
 MATERIAL_PREALPHA = 1
@@ -26,12 +26,12 @@ def read_material_section(rdr):
     materialType = {}
     
     # parse texture names
-    for i in range(rdr.smsData.textureCount):
+    for i in range(rdr.mdlData.textureCount):
         texturePath = rdr.read_str().upper()
         textureId = rdr.read_num(SINT32)
-        rdr.smsData.textureNames[textureId] = texturePath
+        rdr.mdlData.textureNames[textureId] = texturePath
     # load each material
-    for i in range(rdr.smsData.materialCount):
+    for i in range(rdr.mdlData.materialCount):
         duplicate = None
         opacity = None
         doubleSided = None

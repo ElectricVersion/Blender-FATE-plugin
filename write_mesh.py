@@ -1,4 +1,4 @@
-from io_fate_mdl.util import *
+from .util import *
 
 def write_basic_info(wtr):
     wtr.write_num(1.0, FLOAT) #model scale
