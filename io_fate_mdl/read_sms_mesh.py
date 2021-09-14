@@ -36,7 +36,7 @@ def read_mesh_section(rdr):
             rdr.mdlData.triangles.append((a,b,c))
         for j in range(vertexCount):
             u = rdr.read_num(FLOAT)
-            v = rdr.read_num(FLOAT)
+            v = 1.0 - rdr.read_num(FLOAT)
             rdr.mdlData.uvs.append((u,v))
         for j in range(vertexCount):
             currentVertex = VertexData()
@@ -87,7 +87,7 @@ def read_mesh_section(rdr):
         #transform[3][2] = z
         
         bone.pos = position
-        bone.localPos = position.copy()
+        #bone.localPos = position.copy()
         bone.transform = transform.to_4x4()
         bone.transform.translation = position
         bone.localTransform = bone.transform.copy()#.to_quaternion()

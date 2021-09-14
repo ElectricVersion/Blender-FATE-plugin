@@ -250,13 +250,31 @@ class ImportSMS(Operator, ImportHelper):
                 invertedTfm = i.localTransform.inverted()
                 invertedTfm.translation = i.pos
                 i.localTransform = parent.localTransform @ invertedTfm
-                i.localPos = i.localTransform @ i.localPos
                 print("TRANSFORMS")
                 print(i.transform)
                 print(parent.transform)
                 print(i.localTransform)
             else:
-                i.localPos = i.localTransform @ i.localPos
+                i.localTransform = mathutils.Matrix.Identity(4)
+            i.localPos = i.localTransform.to_translation()
+        
+        for i in boneOrder:
+            aBone = armatureBones[i.name]
+            aBone.head = i.localPos
+        for i in boneOrder:
+            aBone = armatureBones[i.name]
+            if len(aBone.children) == 1:
+                aBone.tail = aBone.children[0].head
+            elif len(aBone.children) > 1:
+                averagePos = mathutils.Vector((0.0,0.0,0.0))
+                for j in aBone.children:
+                    averagePos = averagePos + j.head
+                averagePos = averagePos / len(aBone.children)
+                aBone.tail = averagePos
+            else:
+                aBone.length = 0.5
+        
+        
         if bpy.ops.object.mode_set.poll():
             bpy.ops.object.mode_set(mode='OBJECT')
         
@@ -280,28 +298,35 @@ class ImportSMS(Operator, ImportHelper):
                 boneTfmLocal = reader.mdlData.bones[j].localTransform
                 print(boneTfmLocal)
                 boneOffset =  mathutils.Vector(reader.mdlData.vertices[i].boneOffsets[j])
-                #boneOffsetTfm = mathutils.Matrix.Translation(boneOffset)
-                #boneOffset = boneTfm @ boneOffset
                 print("WEIGHT " + str(boneWeight))
-                #print(boneOffset)
-                #print(boneTfmLocal.to_quaternion())
                 boneOffset = boneTfmLocal @ boneOffset
-                vertexPositionNew = boneOffset #+ bonePosLocal 
+                vertexPositionNew = boneOffset
                 vertexPositionNew = vertexPositionNew * boneWeight
                 print(vertexPositionNew)
                 vertexPosition = vertexPosition + vertexPositionNew
             if len(vertexBones) == 0:
                 vertexPosition = rootBone.localPos
             vert = bm.verts.new( vertexPosition )
-        #bm.verts.index_update()
+        bm.verts.index_update()
         bm.verts.ensure_lookup_table()
         
-        print(reader.mdlData.tagUserData)
+        #print(reader.mdlData.tagUserData)
         
         for f in reader.mdlData.triangles:
             if bm.faces.get((bm.verts[f[0]], bm.verts[f[1]], bm.verts[f[2]])) == None:
                 bm.faces.new((bm.verts[f[0]], bm.verts[f[1]], bm.verts[f[2]]))
-                
+        
+        for i in range(len(reader.mdlData.uvs)):
+            uv = reader.mdlData.uvs[i]
+            reader.mdlData.vertices[i].uvPos.append(uv)
+        
+        uv_layer = bm.loops.layers.uv.verify()
+        for f in bm.faces:
+            for loop in f.loops:
+                loop_uv = loop[uv_layer]
+                currentVert = reader.mdlData.vertices[loop.vert.index]
+                loop_uv.uv = currentVert.uvPos[0]
+        
         bm.to_mesh(mesh)
         mesh.update()
         bm.free()
