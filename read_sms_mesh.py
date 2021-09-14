@@ -13,7 +13,7 @@ def read_basic_info(rdr):
 def read_mesh_section(rdr):
     for i in range(rdr.mdlData.tagCount):
         rdr.mdlData.tagNames.append(rdr.read_str())
-        if rdr.mdlData.version == "V2.0":
+        if rdr.mdlData.version == "V2.0\0":
             hasUserData = rdr.read_num(SINT16)
             if hasUserData > 0:
                 rdr.mdlData.tagUserData.append(rdr.read_str())
