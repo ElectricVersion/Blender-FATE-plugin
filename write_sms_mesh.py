@@ -1,15 +1,15 @@
 from .util import *
 
 def write_basic_info(wtr):
+    wtr.write_str("V2.0")
     wtr.write_num(1.0, FLOAT) #model scale
-    wtr.write_num(1, UINT32) #objects count (for now only one object can be exported per file)
-    wtr.write_num(0, UINT32) #lights count
-    wtr.write_num(0, UINT32) #points count
-    wtr.write_num(0, UINT32) #paths count
+    wtr.write_num(1, UINT32) #mesh count (for now only one object can be exported per file)
     
     wtr.mdlData.activeObject = wtr.context.active_object
     materialSlots = wtr.mdlData.activeObject.material_slots.values()
     
+    activeMesh = wtr.mdlData.activeObject.to_mesh(preserve_all_data_layers=True)
+    wtr.mdlData.vertices = activeMesh.vertices.values()
     #get the number of materials
     for i in materialSlots:
         material = i.material
@@ -23,6 +23,9 @@ def write_basic_info(wtr):
             if j.bl_idname == "ShaderNodeTexImage":
                 wtr.mdlData.textures.append(j)
     
+    
+    wtr.write_num(len(wtr.mdlData.vertices), UINT32) #vertex count
+    wtr.write_num(0, UINT32) #tags count (I still dont know what this does oops so 0 for now)
     wtr.write_num(len(wtr.mdlData.materials), UINT32) #materials count
     wtr.write_num(len(wtr.mdlData.textures), UINT32) #textures count
 
@@ -82,10 +85,10 @@ def write_mesh_section(wtr):
             actualNormalCount = len(vertices)
             wtr.write_num(actualNormalCount, UINT32)
             for j in range(actualNormalCount):
-                blenderNormal = vertices[j].normal#.normalized() # the normal stored by blender
+                blenderNormal = vertices[j].normal # the normal stored by blender
+                au = compress_normal(blenderNormal[1], 2)
+                av = compress_normal(blenderNormal[2], 1)
                 print("NORMAL " + str(blenderNormal))
-                au, av = compress_normal(blenderNormal[1], blenderNormal[2], blenderNormal[0])
-                print(au, av)
                 wtr.write_num(au, BYTE)
                 wtr.write_num(av, BYTE)
         wtr.write_num(0, UINT32) # vertex color count (none temporarily)

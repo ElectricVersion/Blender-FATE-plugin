@@ -10,7 +10,6 @@ def read_basic_info(rdr):
     rdr.mdlData.textureCount = rdr.read_num(UINT32)
 
 def read_mesh_section(rdr):
-        normalReferences = []
         for i in range(rdr.mdlData.objectCount):
             uvsLoaded = len(rdr.mdlData.uvs)
             verticesLoaded = len(rdr.mdlData.vertices)
@@ -53,18 +52,21 @@ def read_mesh_section(rdr):
             print("HAS NORMALS? " + str(hasNormals))
             if hasNormals > 0:
                 for j in range(vertexCount):
-                    normalReferences.append( rdr.read_num(UINT32) + len(rdr.mdlData.normals))
+                    rdr.mdlData.normalReferences.append( rdr.read_num(UINT32) + len(rdr.mdlData.normals))
+                print("NORMAL REFERENCES", len(rdr.mdlData.normalReferences))
                 actualNormalCount = rdr.read_num(UINT32)
                 print("ACTUAL NORMAL COUNT " + str(actualNormalCount))
                 for j in range(actualNormalCount):
                     au = rdr.read_num(BYTE)
                     av = rdr.read_num(BYTE)
-                    rdr.mdlData.normals.append( ((au, av), (au, av), (au, av)) ) # im not sure how to "decompress" these yet but i think i need to
+                    nx, ny, nz = decompress_normal(au, av)
+                    print("NORMALS", nx, ny, nz)
+                    rdr.mdlData.normals.append( (nx, nz, ny) ) # i figured out how to decompress em lol
             else:
                 if len(rdr.mdlData.normals) == 0:
-                    rdr.mdlData.normals.append( (0,1,0) )
+                    rdr.mdlData.normals.append( (0,0,1) )
                 for j in range(vertexCount):
-                    normalReferences.append( len(rdr.mdlData.normals) - 1)
+                    rdr.mdlData.normalReferences.append( len(rdr.mdlData.normals) - 1)
             #vertex colors
             actualVertexColorCount = rdr.read_num(SINT32)
             for j in range(vertexCount):

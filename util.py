@@ -6,13 +6,14 @@ SINT32 = {"format": "l", "size": 4}
 UINT16 = {"format": "H", "size": 2}
 SINT16 = {"format": "h", "size": 2}
 FLOAT  = {"format": "f", "size": 4}
-BYTE  = {"format": "B", "size": 1}
+BYTE  = {"format": "b", "size": 1}
 
 class VertexData:
     def __init__(self):
         self.references = []
         self.uvPos = []
         self.pos = None
+        self.normals = []
         self.bones = []
         self.boneOffsets = {}
         self.boneWeights = {}
@@ -43,6 +44,7 @@ class ModelData: # used for both SMS and MDL files since they have similar forma
         self.normals = []
         self.vertexColors = []
         self.uvReferences = []
+        self.normalReferences = []
         self.vertexReferences = []
         
         self.activeObject = None
@@ -120,12 +122,19 @@ class Writer:
         self.txtData += output
         print("Wrote string: " + str(output))
         
-def compress_normal(p_normal, component):
+def compress_normal(p_x, p_y, p_z):
     multiplier = (3.14159 / 255.0) * 2.0
-    if component == 0: #x
-        return round(math.asin(p_normal)/multiplier) 
-    if component == 1: # z
-        return 127 - round(math.atan(p_normal)/multiplier) # = AV
-    if component == 2: #y
-        return round(math.acos(p_normal)/multiplier) # = AU
-    return 0
+    alpha = math.acos(p_y)
+    AU = math.floor(alpha / multiplier)
+    beta = math.asin(p_z / math.sin(alpha))
+    AV = math.floor(beta / multiplier)
+    return AU, AV
+
+def decompress_normal(AU, AV):
+    multiplier = 3.14159 / 255.0 # convert from 0-255 to radians
+    alpha = AU * 2.0 * multiplier
+    beta = AV * 2.0 * multiplier
+    x = math.cos(beta) * math.sin(alpha)
+    y = math.cos(alpha)
+    z = math.sin(beta) * math.sin(alpha)
+    return x, y, z

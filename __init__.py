@@ -1,11 +1,11 @@
 import bpy
 from .util import *
 from .read_material import *
-from .read_mesh import *
-from .read_sms_mesh import *
-from .read_sms_material import *
-from .write_mesh import *
 from .write_material import *
+from .read_mesh import *
+from .write_mesh import *
+from .read_sms_mesh import *
+from .write_sms_mesh import *
 import bmesh
 
 from bpy_extras.io_utils import ImportHelper
@@ -31,6 +31,7 @@ def register():
     bpy.utils.register_class(ImportSMS)
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
     bpy.utils.register_class(ExportMDL)
+    bpy.utils.register_class(ExportSMS)
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
 
 def unregister():
@@ -38,6 +39,7 @@ def unregister():
     bpy.utils.unregister_class(ImportSMS)
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
     bpy.utils.unregister_class(ExportMDL)
+    bpy.utils.unregister_class(ExportSMS)
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
 
 def menu_func_import(self, context):
@@ -46,6 +48,7 @@ def menu_func_import(self, context):
 
 def menu_func_export(self, context):
     self.layout.operator(ExportMDL.bl_idname, text="Export FATE mdl")
+    self.layout.operator(ExportSMS.bl_idname, text="Export FATE sms")
 
 
 class ExportMDL(Operator, ExportHelper):
@@ -112,26 +115,32 @@ class ImportMDL(Operator, ImportHelper):
         
         bm = bmesh.new()
         
-        #print(reader.mdlData.vertices)
+        print("VERTEX REFERENCES", len(reader.mdlData.vertexReferences))
         vertices = {}
         for i in range(len(reader.mdlData.vertexReferences)):
             v = reader.mdlData.vertexReferences[i]
             v2 = reader.mdlData.uvReferences[i]
+            v3 = reader.mdlData.normalReferences[i]
             if v not in vertices:
                 vertices[v] = VertexData()
                 vertices[v].pos = reader.mdlData.vertices[v]
             vertices[v].uvPos.append(reader.mdlData.uvs[v2])
+            vertices[v].normals.append(mathutils.Vector(reader.mdlData.normals[v3]))
             vertices[v].references.append(i)
         
+        print("VERTEX COUNT", len(vertices))
         for i in range(len(vertices)):
             vert = bm.verts.new(vertices[i].pos)
+            vert.normal = vertices[i].normals[0]
+            vert.normal_update()
         bm.verts.index_update()
         bm.verts.ensure_lookup_table()
         
         for f in reader.mdlData.triangles:
             faceVerts = [bm.verts[i] for i in f]
             if bm.faces.get(faceVerts) == None:
-                bm.faces.new(faceVerts)
+                face = bm.faces.new(faceVerts)
+                face.normal_update()
         
         uv_layer = bm.loops.layers.uv.verify()
         for f in bm.faces:
@@ -139,8 +148,12 @@ class ImportMDL(Operator, ImportHelper):
                 loop_uv = loop[uv_layer]
                 currentVert = vertices[loop.vert.index]
                 loop_uv.uv = currentVert.uvPos.pop(0)
-
-        
+            #calculate the normal for the face from each vertex normal
+            #faceVerts = {}
+            #for i, v in enumerate(f.verts):
+            #   faceVerts[i] = v
+            
+        bm.normal_update()
         bm.to_mesh(mesh)
         mesh.update()
         
@@ -152,7 +165,7 @@ class ImportMDL(Operator, ImportHelper):
         return {'FINISHED'}
         
 class ImportSMS(Operator, ImportHelper):
-    """Import FATE model (.mdl)"""
+    """Import FATE model (.sms)"""
     bl_idname = "import_sms.sms_data"
     bl_label = "Import FATE SMS"
 
@@ -348,4 +361,35 @@ class ImportSMS(Operator, ImportHelper):
         
         
         print(reader.mdlData.objectCount)
+        return {'FINISHED'}
+        
+class ExportSMS(Operator, ExportHelper):
+    """Import FATE model (.sms)"""
+    bl_idname = "export_sms.sms_data"
+    bl_label = "Export FATE SMS"
+
+    filename_ext = ".sms"
+
+    filter_glob: StringProperty(
+        default="*.sms",
+        options={'HIDDEN'},
+        maxlen=255,  # Max internal buffer length, longer would be clamped.
+    )
+
+    def execute(self, context):
+        return self.write_sms_file(context, self.filepath)
+        
+    def write_sms_file(self, context, filepath):
+        print("Saving SMS file.")
+        #first we make a bytes object of the file contents
+        writer = util.Writer(context)
+        
+        write_sms_mesh.write_basic_info(writer)
+        write_material.write_material_section(writer)
+        write_sms_mesh.write_mesh_section(writer)
+        
+        f = open(filepath, 'wb')
+        f.write(writer.txtData)
+        f.close()
+        
         return {'FINISHED'}
