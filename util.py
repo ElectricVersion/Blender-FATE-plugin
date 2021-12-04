@@ -35,6 +35,7 @@ class ModelData: # used for both SMS and MDL files since they have similar forma
     def __init__(self):
         self.textureNames = {}
         self.materialNames = {}
+        self.objectNames = []
         self.userData = {}
         self.uvs = []
         self.vertices = []
@@ -102,7 +103,7 @@ class Reader:
             currentChar = bytes([self.txtData[self.filePosition]]).decode("utf-8")
             output += currentChar
             self.filePosition += 1
-        print("Read string: " + output)
+        print("Read block: " + output)
         return output
 
 class Writer:
@@ -111,13 +112,22 @@ class Writer:
         self.context = p_context
         self.mdlData = ModelData()
         
-    def write_num(self, p_input, p_type = UINT32):
+    def write_num(self, p_input, p_type = UINT32, p_addr = -1):
         output = struct.pack(p_type["format"], p_input)
-        self.txtData += output
+        if p_addr < 0:
+            self.txtData += output
+        else:
+            sizeToReplace = p_type["size"]
+            rewrittenData = self.txtData[0:p_addr]
+            rewrittenData += output
+            postData = self.txtData[p_addr+sizeToReplace:len(self.txtData)]
+            rewrittenData += postData
+            self.txtData = rewrittenData
         print("Wrote " + str(p_type["size"]) + " bytes: " + str(output))
     
-    def write_str(self, p_input):
-        p_input += "\0"
+    def write_str(self, p_input, term = True):
+        if term:
+            p_input += "\0"
         output = p_input.encode("utf-8")
         self.txtData += output
         print("Wrote string: " + str(output))

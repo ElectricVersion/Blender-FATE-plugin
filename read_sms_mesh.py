@@ -20,6 +20,7 @@ def read_mesh_section(rdr):
     for i in range(rdr.mdlData.objectCount):
         # read the mesh header
         meshName = rdr.read_block(68)
+        rdr.mdlData.objectNames.append(meshName)
         textureCount = rdr.read_num(UINT32)
         vertexCount = rdr.read_num(UINT32)
         triangleCount = rdr.read_num(UINT32)
@@ -28,10 +29,11 @@ def read_mesh_section(rdr):
         uvStart = rdr.read_num(UINT32)
         verticesStart = rdr.read_num(UINT32)
         meshSize = rdr.read_num(UINT32)
+        existingVerts = len(rdr.mdlData.vertices)
         for j in range(triangleCount):
-            a = rdr.read_num(UINT32)
-            b = rdr.read_num(UINT32)
-            c = rdr.read_num(UINT32)
+            a = rdr.read_num(UINT32) + existingVerts
+            b = rdr.read_num(UINT32) + existingVerts
+            c = rdr.read_num(UINT32) + existingVerts
             material = rdr.read_num(UINT32)
             rdr.mdlData.triangles.append((a,b,c))
         for j in range(vertexCount):
@@ -41,10 +43,10 @@ def read_mesh_section(rdr):
         for j in range(vertexCount):
             currentVertex = VertexData()
             boneCount = rdr.read_num(UINT32)
-            print("BONE COUNT" + str(boneCount))
+            #print("BONE COUNT" + str(boneCount))
             for k in range(boneCount):
                 boneIndex = rdr.read_num(UINT32)
-                print(boneIndex)
+                #print(boneIndex)
                 x = rdr.read_num(FLOAT) * rdr.mdlData.modelScale
                 y = rdr.read_num(FLOAT) * rdr.mdlData.modelScale
                 z = rdr.read_num(FLOAT) * rdr.mdlData.modelScale
@@ -52,7 +54,7 @@ def read_mesh_section(rdr):
                 av = rdr.read_num(BYTE)
                 weight = rdr.read_num(FLOAT)
                 if weight > 0.0:
-                    print(weight)
+                    #print(weight)
                     currentVertex.bones.append(boneIndex)
                     currentVertex.boneOffsets[boneIndex] = [x,y,z]
                     currentVertex.boneWeights[boneIndex] = weight
@@ -95,4 +97,4 @@ def read_mesh_section(rdr):
         #print(testPosMatrix)
         rdr.mdlData.bones.append(bone)
         
-    print("VERTEX COUNT" + str(vertexCount))
+    #print("VERTEX COUNT" + str(vertexCount))

@@ -10,6 +10,7 @@ def write_basic_info(wtr):
     
     activeMesh = wtr.mdlData.activeObject.to_mesh(preserve_all_data_layers=True)
     wtr.mdlData.vertices = activeMesh.vertices.values()
+    wtr.mdlData.triangles = activeMesh.polygons.values()
     #get the number of materials
     for i in materialSlots:
         material = i.material
@@ -31,27 +32,27 @@ def write_basic_info(wtr):
 
 def write_mesh_section(wtr):
     for i in range(1): # change later to be the number of objects
-        wtr.write_num(0.0, FLOAT) #pivot x
-        wtr.write_num(0.0, FLOAT) #pivot y
-        wtr.write_num(0.0, FLOAT) #pivot z
-        
         meshObject = wtr.mdlData.activeObject.to_mesh(preserve_all_data_layers=True)
-        vertices = meshObject.vertices.values()
+        vertices = wtr.mdlData.vertices
+        meshName = meshObject.name.ljust(68, '\0')
+        wtr.write_str(meshName, False)
+        wtr.write_num(len(wtr.mdlData.textures), UINT32)
+        wtr.write_num(len(wtr.mdlData.vertices), UINT32)
+        ptrHeaderTriStart = len(wtr.textData) # save this address so we can go back and write it later
+        wtr.write_num(len(wtr.mdlData.triangles), UINT32) #triangle count
+        wtr.write_num(0, UINT32) #triangle section start addr (maybe unused?)
+        wtr.write_num(100, UINT32) #header size, idk why we need this (always the same)
+        ptrHeaderUvStart = len(wtr.textData) # save this address so we can go back and write it later
+        wtr.write_num(0, UINT32) #location of UV header
+        ptrHeaderVertStart = len(wtr.textData) # save this address so we can go back and write it later
+        wtr.write_num(0, UINT32) #location of verts header
+        ptrMeshSize = len(wtr.textData) # save this address so we can go back and write it later
+        wtr.write_num(0, UINT32) #size of mesh
         
-        normalReferences = []
-        vertexReferences = []
-        normalReferences = []
-        uvReferences = []
-        uvLoops = meshObject.uv_layers.active.data.values()
-        uvs = []
-        for j in uvLoops:
-            uvs.append(j.uv)
-        faces = meshObject.polygons.values()
-        for j in faces:
-            for k in j.vertices:
-                vertexReferences.append(k)
-            for k in j.loop_indices:
-                uvReferences.append(k)
+        #start triangle list
+        headerTriStart = len(wtr.textData)
+        wtr.write_num(headerTriStart, UINT32, ptrHeaderTriStart)
+        
         print("UV COUNT")
         print(len(uvs))
         print("UV REF COUNT")

@@ -182,7 +182,7 @@ class ImportSMS(Operator, ImportHelper):
         return self.read_sms_file(context, self.filepath)
         
     def read_sms_file(self, context, filepath):
-        print("Loading MDL file.")
+        print("Loading SMS file.")
         f = open(filepath, 'rb')
         data = f.read()
         f.close()
@@ -263,10 +263,10 @@ class ImportSMS(Operator, ImportHelper):
                 invertedTfm = i.localTransform.inverted()
                 invertedTfm.translation = i.pos
                 i.localTransform = parent.localTransform @ invertedTfm
-                print("TRANSFORMS")
-                print(i.transform)
-                print(parent.transform)
-                print(i.localTransform)
+                #print("TRANSFORMS")
+                #print(i.transform)
+                #print(parent.transform)
+                #print(i.localTransform)
             else:
                 i.localTransform = mathutils.Matrix.Identity(4)
             i.localPos = i.localTransform.to_translation()
@@ -296,26 +296,26 @@ class ImportSMS(Operator, ImportHelper):
         
         bm = bmesh.new()
         mesh = bpy.data.meshes.new("Untitled FATE Object")
-        print(reader.mdlData.objectCount)
-        print(len(reader.mdlData.vertices))
-        print(len(reader.mdlData.triangles))
+        #print(reader.mdlData.objectCount)
+        #print(len(reader.mdlData.vertices))
+        #print(len(reader.mdlData.triangles))
         for i in range(len(reader.mdlData.vertices)):
-            print("NEW VERTEX")
+            #print("NEW VERTEX")
             vertexBones = reader.mdlData.vertices[i].bones
             vertexPosition = mathutils.Vector((0,0,0))
             for j in vertexBones:
                 boneWeight = reader.mdlData.vertices[i].boneWeights[j]
                 boneName = reader.mdlData.bones[j].name
-                print(boneName)
+                #print(boneName)
                 bonePosLocal = reader.mdlData.bones[j].localPos
                 boneTfmLocal = reader.mdlData.bones[j].localTransform
-                print(boneTfmLocal)
+                #print(boneTfmLocal)
                 boneOffset =  mathutils.Vector(reader.mdlData.vertices[i].boneOffsets[j])
-                print("WEIGHT " + str(boneWeight))
+                #print("WEIGHT " + str(boneWeight))
                 boneOffset = boneTfmLocal @ boneOffset
                 vertexPositionNew = boneOffset
                 vertexPositionNew = vertexPositionNew * boneWeight
-                print(vertexPositionNew)
+                #print(vertexPositionNew)
                 vertexPosition = vertexPosition + vertexPositionNew
             if len(vertexBones) == 0:
                 vertexPosition = rootBone.localPos
@@ -360,7 +360,8 @@ class ImportSMS(Operator, ImportHelper):
                 vGroups[boneIndex].add([vertexIndex], boneWeight, "REPLACE")
         
         
-        print(reader.mdlData.objectCount)
+        #print(reader.mdlData.objectCount)
+        #print(reader.mdlData.objectNames)
         return {'FINISHED'}
         
 class ExportSMS(Operator, ExportHelper):
