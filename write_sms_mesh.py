@@ -51,7 +51,7 @@ def write_mesh_section(wtr):
         
         #start triangle list
         headerTriStart = len(wtr.textData)
-        wtr.write_num(headerTriStart, UINT32, ptrHeaderTriStart)
+        
         
         print("UV COUNT")
         print(len(uvs))

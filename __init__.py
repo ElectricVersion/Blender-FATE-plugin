@@ -137,8 +137,12 @@ class ImportMDL(Operator, ImportHelper):
         bm.verts.ensure_lookup_table()
         
         for f in reader.mdlData.triangles:
-            faceVerts = [bm.verts[i] for i in f]
-            if bm.faces.get(faceVerts) == None:
+            faceVerts = []
+            for i in f:
+                if bm.verts[i] not in faceVerts:
+                    faceVerts.append(bm.verts[i])
+            print(faceVerts)
+            if bm.faces.get(faceVerts) == None and len(faceVerts) == 3:
                 face = bm.faces.new(faceVerts)
                 face.normal_update()
         
