@@ -1,86 +1,86 @@
 import struct
 import math
 
-UINT32 = {"format": "L", "size": 4}
-SINT32 = {"format": "l", "size": 4}
-UINT16 = {"format": "H", "size": 2}
-SINT16 = {"format": "h", "size": 2}
-FLOAT  = {"format": "f", "size": 4}
+UINT32 = {"format": "<L", "size": 4}
+SINT32 = {"format": "<l", "size": 4}
+UINT16 = {"format": "<H", "size": 2}
+SINT16 = {"format": "<h", "size": 2}
+FLOAT  = {"format": "<f", "size": 4}
 BYTE  = {"format": "b", "size": 1}
 
-class VertexData:
+class Vertex_Data:
     def __init__(self):
         self.references = []
-        self.uvPos = []
+        self.uv_pos = []
         self.pos = None
         self.normals = []
         self.bones = []
-        self.boneOffsets = {}
-        self.boneWeights = {}
+        self.bone_offsets = {}
+        self.bone_weights = {}
 
-class BoneData:
+class Bone_Data:
     def __init__(self):
         self.parent = None
         self.name = ""
         self.transform = None
         self.pos = None
-        self.localPos = None
-        self.localTransform = None
+        self.local_pos = None
+        self.local_transform = None
         self.vertices = []
-        self.vertexOffsets = []
-        self.vertexWeights = []
+        self.vertex_offsets = []
+        self.vertex_weights = []
         self.children = []
 
-class ModelData: # used for both SMS and MDL files since they have similar formats
+class Model_Data: # used for both SMS and MDL files since they have similar formats
     def __init__(self):
-        self.textureNames = {}
-        self.materialNames = {}
-        self.objectNames = []
-        self.userData = {}
+        self.texture_names = {}
+        self.material_names = {}
+        self.object_names = []
+        self.user_data = {}
         self.uvs = []
         self.vertices = []
         self.triangles = []
         self.materials = []
         self.textures = []
         self.normals = []
-        self.vertexColors = []
-        self.uvReferences = []
-        self.normalReferences = []
-        self.vertexReferences = []
+        self.vertex_colors = []
+        self.uv_references = []
+        self.normal_references = []
+        self.vertex_references = []
         
-        self.activeObject = None
+        self.active_object = None
         
-        self.modelScale = 1.0
-        self.objectCount = 0
-        self.lightsCount = 0
-        self.pointsCount = 0
-        self.pathsCount = 0
-        self.materialCount = 0
-        self.textureCount = 0
-        self.totalVertexCount = 0
-        self.totalFaceCount = 0
+        self.model_scale = 1.0
+        self.object_count = 0
+        self.lights_count = 0
+        self.points_count = 0
+        self.paths_count = 0
+        self.material_count = 0
+        self.texture_count = 0
+        self.total_vertex_count = 0
+        self.total_face_count = 0
         
         #SMS stuff
-        self.tagCount = 0
+        self.tag_count = 0
         self.version = ""
-        self.tagNames = []
-        self.tagUserData = []
+        self.tag_names = []
+        self.tag_user_data = []
         self.bones = []
-        self.vertexDict = {}
+        self.vertex_dict = {}
         return
 
 class Reader:
     def __init__(self, p_input):
-        self.filePosition = 0
-        self.txtData = p_input
-        self.mdlData = ModelData()
+        self.file_position = 0
+        self.txt_data = p_input
+        self.mdl_data = Model_Data()
         
     def read_num(self, p_type = UINT32):
         output = []
         for i in range(p_type["size"]):
-            output.append(self.txtData[self.filePosition + i])
+            output.append(self.txt_data[self.file_position + i])
         
-        self.filePosition += p_type["size"]
+        self.file_position += p_type["size"]
         output = struct.unpack(p_type["format"], bytes(output))[0]
         print("Read " + str(p_type["size"]) + " bytes: " + str(output))
         
@@ -88,48 +88,59 @@ class Reader:
         
     def read_str(self, p_delim = '\0'):
         output = ""
-        currentChar = None
-        while currentChar != p_delim:
-            currentChar = bytes([self.txtData[self.filePosition]]).decode("utf-8")
-            output += currentChar
-            self.filePosition += 1
+        current_char = None
+        while current_char != p_delim:
+            current_char = bytes([self.txt_data[self.file_position]]).decode("utf-8")
+            output += current_char
+            self.file_position += 1
         print("Read string: " + output)
         return output
         
     def read_block(self, p_len):
         output = ""
-        currentChar = None
+        current_char = None
         for i in range(p_len):
-            currentChar = bytes([self.txtData[self.filePosition]]).decode("utf-8")
-            output += currentChar
-            self.filePosition += 1
+            current_char = bytes([self.txt_data[self.file_position]]).decode("utf-8")
+            output += current_char
+            self.file_position += 1
         print("Read block: " + output)
         return output
 
 class Writer:
     def __init__(self, p_context):
-        self.txtData = bytes([])
+        self.txt_data = [] #bytes([])
+        self.pos = 0 #position in txt_data in bytes
         self.context = p_context
-        self.mdlData = ModelData()
-        
-    def write_num(self, p_input, p_type = UINT32, p_addr = -1):
+        self.mdl_data = Model_Data()
+    
+    def FILE_END(self):
+        return len(self.txt_data)
+    
+    def extend(self, p_len):
+        self.txt_data += [0 for i in range(p_len)]
+    
+    def seek(self, p_pos):
+        if p_pos > self.FILE_END():
+            self.extend(p_pos - self.FILE_END())
+        self.pos = p_pos
+    
+    def write(self, p_content):
+        self.txt_data[self.pos:self.pos+len(p_content)] = p_content
+        self.pos += len(p_content)
+    
+    def write_num(self, p_input, p_type = UINT32):
         output = struct.pack(p_type["format"], p_input)
-        if p_addr < 0:
-            self.txtData += output
-        else:
-            sizeToReplace = p_type["size"]
-            rewrittenData = self.txtData[0:p_addr]
-            rewrittenData += output
-            postData = self.txtData[p_addr+sizeToReplace:len(self.txtData)]
-            rewrittenData += postData
-            self.txtData = rewrittenData
+        if self.pos == self.FILE_END():
+            self.extend(len(output))
+        self.write(list(output))
         print("Wrote " + str(p_type["size"]) + " bytes: " + str(output))
+    
     
     def write_str(self, p_input, term = True):
         if term:
             p_input += "\0"
         output = p_input.encode("utf-8")
-        self.txtData += output
+        self.write(list(output))
         print("Wrote string: " + str(output))
         
 def compress_normal(p_x, p_y, p_z):

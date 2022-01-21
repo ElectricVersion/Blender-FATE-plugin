@@ -3,25 +3,25 @@ import bpy
 import bpy.types
 
 def write_material_section(wtr):
-    for i in range(len(wtr.mdlData.textures)):
+    for i in range(len(wtr.mdl_data.textures)):
         #texture names
-        texturePath = wtr.mdlData.textures[i].image.filepath
-        texturePath = texturePath.rsplit("/")[-1]
-        wtr.write_str(texturePath)
+        texture_path = wtr.mdl_data.textures[i].image.filepath
+        texture_path = texture_path.rsplit("/")[-1]
+        wtr.write_str(texture_path)
         wtr.write_num(i) #texture id
     #materials
-    for i in range(len(wtr.mdlData.materials)):
-        wtr.write_str(wtr.mdlData.materials[i].name) # material name
+    for i in range(len(wtr.mdl_data.materials)):
+        wtr.write_str(wtr.mdl_data.materials[i].name) # material name
         wtr.write_num(i) #material ID
         wtr.write_num(0) #double sided?
         wtr.write_num(1) #collision for this material?
         wtr.write_num(1) #rendering for this material?
         wtr.write_num(0) #userdata ID (still dont know what this means)
-        wtr.write_num(0) #hasColorKey?
+        wtr.write_num(0) #has_color_key?
         wtr.write_num(0) #has shifting behavior?
         wtr.write_num(0) #has flipbook behavior?
-        wtr.write_num(0) #has shifting behavior2?
-        wtr.write_num(0) #has flipbook behavior2?
+        wtr.write_num(0) #has shifting behavior_2?
+        wtr.write_num(0) #has flipbook behavior_2?
         wtr.write_num(0) #render last?
         wtr.write_num(0) #render first?
         

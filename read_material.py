@@ -16,128 +16,128 @@ MATERIAL_SPHEREMAPPOST = 12
 MATERIAL_TYPES = 13
 
 def read_material_section(rdr):    
-    materialReferences = {}
-    materialHasColorKey = {}
-    materialColorKey = {}
-    materialIsDoubleSided = {}
-    materialIsReferenced = {}
-    materialIsCollideable = {}
-    materialIsVisible = {}
-    materialType = {}
+    material_references = {}
+    material_has_color_key = {}
+    material_color_key = {}
+    material_is_double_sided = {}
+    material_is_referenced = {}
+    material_is_collideable = {}
+    material_is_visible = {}
+    material_type = {}
     
     # parse texture names
-    for i in range(rdr.mdlData.textureCount):
-        texturePath = rdr.read_str().upper()
-        textureId = rdr.read_num(SINT32)
-        rdr.mdlData.textureNames[textureId] = texturePath
+    for i in range(rdr.mdl_data.texture_count):
+        texture_path = rdr.read_str().upper()
+        texture_id = rdr.read_num(SINT32)
+        rdr.mdl_data.texture_names[texture_id] = texture_path
     # load each material
-    for i in range(rdr.mdlData.materialCount):
+    for i in range(rdr.mdl_data.material_count):
         duplicate = None
         opacity = None
-        doubleSided = None
-        hasColorKey = None
-        renderLast = None
-        renderFirst	 = None
-        dataID = None
+        double_sided = None
+        has_color_key = None
+        render_last = None
+        render_first	 = None
+        data_i_D = None
 
-        behaviorShifting = None
-        behaviorFlipbook = None
-        flipbookXFrames = None
-        flipbookYFrames = None
-        shiftU = None
-        shiftV = None
-        flipbookTime = None
+        behavior_shifting = None
+        behavior_flipbook = None
+        flipbook_x_Frames = None
+        flipbook_y_Frames = None
+        shift_u = None
+        shift_v = None
+        flipbook_time = None
 
-        behaviorShifting2 = None
-        behaviorFlipbook2 = None
-        flipbookXFrames2 = None
-        flipbookYFrames2 = None
-        shiftU2 = None
-        shiftV2 = None
-        flipbookTime2 = None
+        behavior_shifting_2 = None
+        behavior_flipbook_2 = None
+        flipbook_x_Frames_2 = None
+        flipbook_y_Frames_2 = None
+        shift_u_2 = None
+        shift_v_2 = None
+        flipbook_time_2 = None
 
-        rdr.mdlData.materialNames[i] = rdr.read_str()
-        materialId = rdr.read_num(SINT32)
-        doubleSided = rdr.read_num(SINT32)
-        materialIsCollideable[materialId] = rdr.read_num(SINT32)
-        materialIsVisible[materialId] = rdr.read_num(SINT32)
-        dataId = rdr.read_num(SINT32)
+        rdr.mdl_data.material_names[i] = rdr.read_str()
+        material_id = rdr.read_num(SINT32)
+        double_sided = rdr.read_num(SINT32)
+        material_is_collideable[material_id] = rdr.read_num(SINT32)
+        material_is_visible[material_id] = rdr.read_num(SINT32)
+        data_id = rdr.read_num(SINT32)
         
-        hasColorKey = rdr.read_num(SINT32)
-        if hasColorKey == 1:
+        has_color_key = rdr.read_num(SINT32)
+        if has_color_key == 1:
             r = rdr.read_num(UINT16)
             g = rdr.read_num(UINT16)
             b = rdr.read_num(UINT16)
-            materialColorKey[materialId] = [r, g, b]
+            material_color_key[material_id] = [r, g, b]
         
-        behaviorShifting = rdr.read_num(SINT32)
-        if behaviorShifting == 1:
-            shiftU = rdr.read_num(FLOAT)
-            shiftV = rdr.read_num(FLOAT)
+        behavior_shifting = rdr.read_num(SINT32)
+        if behavior_shifting == 1:
+            shift_u = rdr.read_num(FLOAT)
+            shift_v = rdr.read_num(FLOAT)
         
-        behaviorFlipbook = rdr.read_num(SINT32)
-        if behaviorFlipbook == 1:
-            flipbookXFrames = rdr.read_num(SINT16)
-            flipbookYFrames = rdr.read_num(SINT16)
-            flipbookTime = rdr.read_num(FLOAT)
+        behavior_flipbook = rdr.read_num(SINT32)
+        if behavior_flipbook == 1:
+            flipbook_x_Frames = rdr.read_num(SINT16)
+            flipbook_y_Frames = rdr.read_num(SINT16)
+            flipbook_time = rdr.read_num(FLOAT)
             
         # second layer
-        behaviorShifting2 = rdr.read_num(SINT32)
-        if behaviorShifting2 == 1:
-            shiftU2 = rdr.read_num(FLOAT)
-            shiftV2 = rdr.read_num(FLOAT)
+        behavior_shifting_2 = rdr.read_num(SINT32)
+        if behavior_shifting_2 == 1:
+            shift_u_2 = rdr.read_num(FLOAT)
+            shift_v_2 = rdr.read_num(FLOAT)
         
-        behaviorFlipbook2 = rdr.read_num(SINT32)
-        if behaviorFlipbook2 == 1:
-            flipbookXFrames2 = rdr.read_num(SINT16)
-            flipbookYFrames2 = rdr.read_num(SINT16)
-            flipbookTime2 = rdr.read_num(FLOAT)
+        behavior_flipbook_2 = rdr.read_num(SINT32)
+        if behavior_flipbook_2 == 1:
+            flipbook_x_Frames_2 = rdr.read_num(SINT16)
+            flipbook_y_Frames_2 = rdr.read_num(SINT16)
+            flipbook_time_2 = rdr.read_num(FLOAT)
         
-        renderLast = rdr.read_num(SINT32)
-        renderFirst = rdr.read_num(SINT32)
+        render_last = rdr.read_num(SINT32)
+        render_first = rdr.read_num(SINT32)
             
-        diffuseR = rdr.read_num(SINT16) / 255.0
-        diffuseG = rdr.read_num(SINT16) / 255.0
-        diffuseB = rdr.read_num(SINT16) / 255.0
+        diffuse_r = rdr.read_num(SINT16) / 255.0
+        diffuse_g = rdr.read_num(SINT16) / 255.0
+        diffuse_b = rdr.read_num(SINT16) / 255.0
         
-        ambientR = rdr.read_num(SINT16) / 255.0
-        ambientG = rdr.read_num(SINT16) / 255.0
-        ambientB = rdr.read_num(SINT16) / 255.0
+        ambient_r = rdr.read_num(SINT16) / 255.0
+        ambient_g = rdr.read_num(SINT16) / 255.0
+        ambient_b = rdr.read_num(SINT16) / 255.0
 
-        specularR = rdr.read_num(SINT16) / 255.0
-        specularG = rdr.read_num(SINT16) / 255.0
-        specularB = rdr.read_num(SINT16) / 255.0
+        specular_r = rdr.read_num(SINT16) / 255.0
+        specular_g = rdr.read_num(SINT16) / 255.0
+        specular_b = rdr.read_num(SINT16) / 255.0
         
-        emissiveR = rdr.read_num(SINT16) / 255.0
-        emissiveG = rdr.read_num(SINT16) / 255.0
-        emissiveB = rdr.read_num(SINT16) / 255.0
+        emissive_r = rdr.read_num(SINT16) / 255.0
+        emissive_g = rdr.read_num(SINT16) / 255.0
+        emissive_b = rdr.read_num(SINT16) / 255.0
         
         shininess = rdr.read_num(FLOAT)
-        shininessStrength = rdr.read_num(FLOAT)
+        shininess_strength = rdr.read_num(FLOAT)
         
-        materialType[materialId] = MATERIAL_STANDARD
+        material_type[material_id] = MATERIAL_STANDARD
         
-        diffuseMapId = rdr.read_num(SINT32)
-        opacityMapId = rdr.read_num(SINT32)
-        reflectionMapId = rdr.read_num(SINT32)
-        illuminationMapId = rdr.read_num(SINT32)
-        bumpMapId = rdr.read_num(SINT32)
-        sphereMapId = rdr.read_num(SINT32)
-        multiplyMapId = rdr.read_num(SINT32)
+        diffuse_map_id = rdr.read_num(SINT32)
+        opacity_map_id = rdr.read_num(SINT32)
+        reflection_map_id = rdr.read_num(SINT32)
+        illumination_map_id = rdr.read_num(SINT32)
+        bump_map_id = rdr.read_num(SINT32)
+        sphere_map_id = rdr.read_num(SINT32)
+        multiply_map_id = rdr.read_num(SINT32)
         
-        materialReferences[materialId] = None
-        materialObject = None
+        material_references[material_id] = None
+        material_object = None
         
-        diffuseMapPath = None
-        opacityMapPath = None
-        reflectionMapPath = None
-        illuminationMapPath = None
-        normallMapPath = None
-        sphereMapPath = None
-        multiplyMapPath = None
+        diffuse_map_path = None
+        opacity_map_path = None
+        reflection_map_path = None
+        illumination_map_path = None
+        normall_map_path = None
+        sphere_map_path = None
+        multiply_map_path = None
         
-        materialType[materialId] = MATERIAL_STANDARD
-        materialIsReferenced[materialId] = False
+        material_type[material_id] = MATERIAL_STANDARD
+        material_is_referenced[material_id] = False
         
         #I skipped this section for now
         #it assembles texture paths or something
