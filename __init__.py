@@ -15,7 +15,7 @@ from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
 import mathutils
 from bpy_extras import object_utils
-
+import math
 
 bl_info = {
     "name": "FATE .mdl importer",
@@ -203,21 +203,25 @@ class Import_SMS(Operator, ImportHelper):
         override["object"] = armature
         if bpy.ops.object.mode_set.poll():
             bpy.ops.object.mode_set(mode='EDIT')
-        armature_bones = bpy.context.object.data.edit_bones
+        armature_ebones = bpy.context.object.data.edit_bones
+        #armature_bones = bpy.context.object.data.bones
         
         for i in range(len(reader.mdl_data.bones)):
             v = reader.mdl_data.bones[i]
-            bpy.ops.armature.bone_primitive_add(name=v.name)
-            #bpy.context.object.data.edit_bones[v.name].use_inherit_rotation = True
+            armature_ebones.new(name=v.name)
+            #armature_ebones[v.name].use_relative_parent = True
+            #armature_ebones[v.name].use_inherit_rotation = True
             #bpy.context.object.data.edit_bones[v.name].use_local_location = True
-        
+        #print(len(list(armature_ebones)))
         for i in range(len(reader.mdl_data.bones)):
             v = reader.mdl_data.bones[i]
-            bone = armature_bones[v.name]
+            a_bone = armature_ebones[v.name]
             #bone.translate(mathutils.Vector(v.transform.c[3][0:3]))
             #bone.length = 0.01
             if v.parent > -1:
-                bone.parent = armature_bones[reader.mdl_data.bones[v.parent].name]
+                a_bone.parent = armature_ebones[reader.mdl_data.bones[v.parent].name]
+            else:
+                a_bone.parent = None
             #bpy.context.object.data.edit_bones[v.name].tail = v.transform.c[3]
         
         #find the root bone
@@ -225,77 +229,103 @@ class Import_SMS(Operator, ImportHelper):
         for i in range(len(reader.mdl_data.bones)):
             v = reader.mdl_data.bones[i]
             if v.parent == -1:
-                root_bone = v
+                root_bone = i
             else:
                 parent = reader.mdl_data.bones[v.parent]
                 parent.children.append(i)
-        
-        done = False
-        bone_proc_order = []
-        bone_order = []
-        current_bone = root_bone
-        while not done:
-            bone_order.append(current_bone)
-            children = current_bone.children
-            for i in children:
-                bone_proc_order.append(reader.mdl_data.bones[i])
-            if len(bone_proc_order) == 0:
-                done = True
-            else:
-                current_bone = bone_proc_order.pop(0)
-        
-        #print(bone_order)
-        bone_dict = {}
-        #for i in reader.mdl_data.bones:
-        #    bone_dict[i.name.rstrip("\x_00")] = i
-        #print(bone_dict)
-        
+        print(root_bone)
+        bones = reader.mdl_data.bones
+        bone_order = [root_bone]
+        while len(bone_order) < len(bones):
+            for i in range(len(bones)):
+                v = bones[i]
+                if i not in bone_order and v.parent in bone_order:
+                    bone_order.append(i)
+        print(bone_order)
         #for i in bone_order:
-        #    v = armature_bones[i.name]
-        #    #tfm = bone_dict[i.name].transform @ mathutils.Matrix.Translation(bone_dict[i.name].pos)
-        #    #tfm_loc, tfm_rot, tfm_sca = tfm.decompose()
-        #    #v.head = bone_dict[i.name].pos @ bone_dict[i.name].transform
+        #    v = bones[i]
+        #    parent_tfm = mathutils.Matrix.Identity(4)
+        #    if v.parent > -1:
+        #        parent_tfm = reader.mdl_data.bones[v.parent].local_transform
+        #        inverted_tfm = v.local_transform.inverted()
+        #        inverted_tfm.translation = v.pos
+        #        print("inverted_tfm", v.name)
+        #        print(inverted_tfm)
+        #        print("parent_tfm", v.name)
+        #        print(parent_tfm)
+        #        v.local_transform = parent_tfm @ inverted_tfm
+        #        #print("TRANSFORMS")
+        #        #print(i.transform)
+        #        #print(parent.transform)
+        #        #print(i.local_transform)
+        #    else:
+        #        #v.local_transform = mathutils.Matrix.Identity(4)
+        #        v.local_transform.translation = v.pos
+        #    print("FINAL TRANSFORM FOR", v.name)
+        #    print(v.local_transform)
+        #    v.local_pos = v.local_transform.to_translation()
+        
+        for i in bone_order:
+            v = bones[i]
+            a_bone = armature_ebones[v.name]
+            #a_bone.head = v.pos
+            a_bone.length = 1.0
+            #print(a_bone.use_relative_parent)
+            #a_bone.matrix = v.transform
+            #print(a_bone.use_relative_parent)
+            #a_bone.translate(v.local_pos)
+            tfm_loc = v.local_transform# @ mathutils.Matrix.Scale(-1, 4)
+            tfm = v.transform.copy()
+            axis, roll = bpy.types.Bone.AxisRollFromMatrix(tfm)
+            #local_tfm = tfm.copy()
+            #tfm_loc = v.local_transform.to_3x3()
+            head_pos = mathutils.Vector((0,0,0))
+            parent_tfm = mathutils.Matrix.Identity(4)
+            if v.parent > -1:
+                parent = bones[v.parent]
+                parent_tfm = parent.local_transform
+                #parent_tfm = bpy.types.Bone.MatrixFromAxisRoll(parent.tail - parent.head, parent.roll)
+                #parent_tfm = mathutils.Matrix.Rotation(math.pi/2, 3, parent.vector)
+                #v.local_transform = parent_tfm @ v.local_transform
+                #parent_tfm_local = parent_tfm.to_4x4()
+                #parent_tfm_local.translation = parent.head
+                #axis = parent_tfm @ axis
+                #head_pos = parent_tfm.translation.copy()
+                head_pos = a_bone.parent.tail
+                tfm_loc = parent_tfm @ tfm_loc
+                v.local_transform = tfm_loc
+                #tfm.translation = v.pos
+            a_bone.head = head_pos
+            #a_bone.tail = mathutils.Matrix.LocRotScale(a_bone.head, axis, None) @ v.pos
+            a_bone.tail = (v.local_transform.translation)
+            if a_bone.length < 0.001:
+                a_bone.tail = tfm_loc @ mathutils.Vector(v.pos.normalized())
+            a_bone.roll = roll
+            #a_bone.tail = (tfm @ v.pos) + a_bone.head
+            print(v.name, a_bone.head)
+            print("MATRIX", v.name, tfm_loc)        
         #for i in bone_order:
-        #    #v = armature_bones[i.name]
-        #    #if v.parent:
-        #    #    v.head = v.head + v.parent.head
-        #    #    v.tail = v.parent.head
-            
-        for i in bone_order:
-            if i.parent > -1:
-                parent = reader.mdl_data.bones[i.parent]
-                inverted_tfm = i.local_transform.inverted()
-                inverted_tfm.translation = i.pos
-                i.local_transform = parent.local_transform @ inverted_tfm
-                #print("TRANSFORMS")
-                #print(i.transform)
-                #print(parent.transform)
-                #print(i.local_transform)
-            else:
-                i.local_transform = mathutils.Matrix.Identity(4)
-            i.local_pos = i.local_transform.to_translation()
-        
-        for i in bone_order:
-            a_bone = armature_bones[i.name]
-            a_bone.head = i.local_pos
-        for i in bone_order:
-            a_bone = armature_bones[i.name]
-            if len(a_bone.children) == 1:
-                a_bone.tail = a_bone.children[0].head
-            elif len(a_bone.children) > 1:
-                average_pos = mathutils.Vector((0.0,0.0,0.0))
-                for j in a_bone.children:
-                    average_pos = average_pos + j.head
-                average_pos = average_pos / len(a_bone.children)
-                a_bone.tail = average_pos
-            else:
-                a_bone.length = 0.5
-        
+        #    v = bones[i]
+        #    a_bone = armature_ebones[v.name]
+        #    if len(a_bone.children) == 1:
+        #        a_bone.tail = a_bone.children[0].head
+        #    elif len(a_bone.children) > 1:
+        #        average_pos = mathutils.Vector((0.0,0.0,0.0))
+        #        for j in a_bone.children:
+        #            average_pos = average_pos + j.head
+        #        average_pos = average_pos / len(a_bone.children)
+        #        a_bone.tail = average_pos
+        #    else:
+        #        a_bone.length = 0.5
+        #for i in bone_order:
+        #    v = bones[i]
+        #    a_bone = armature_ebones[v.name]
+        #    if a_bone.length < 0.001:
+        #        a_bone.length = 0.1
+        print(len(list(armature_ebones)))
         
         if bpy.ops.object.mode_set.poll():
             bpy.ops.object.mode_set(mode='OBJECT')
-        
-        armature_bones = armature.bones
         
         
         bm = bmesh.new()
@@ -362,8 +392,8 @@ class Import_SMS(Operator, ImportHelper):
                 bone_weight = reader.mdl_data.vertices[vertex_index].bone_weights[bone_index]
                 bone = reader.mdl_data.bones[bone_index]
                 v_groups[bone_index].add([vertex_index], bone_weight, "REPLACE")
-        
-        
+        arm_mod = bpy.data.objects[mesh.name].modifiers.new("Armature", "ARMATURE") #add armature modifier to the mesh
+        arm_mod.object = bpy.data.objects[armature.name] #set the modifier to use the newly created armature
         #print(reader.mdl_data.object_count)
         #print(reader.mdl_data.object_names)
         return {'FINISHED'}

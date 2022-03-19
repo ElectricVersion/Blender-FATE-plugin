@@ -11,6 +11,7 @@ def read_basic_info(rdr):
     rdr.mdl_data.texture_count = rdr.read_num(UINT32)
     
 def read_mesh_section(rdr):
+    rdr.show_logs = False
     for i in range(rdr.mdl_data.tag_count):
         rdr.mdl_data.tag_names.append(rdr.read_str())
         if rdr.mdl_data.version == "V2.0\0":
@@ -59,16 +60,17 @@ def read_mesh_section(rdr):
                     current_vertex.bone_offsets[bone_index] = [x,y,z]
                     current_vertex.bone_weights[bone_index] = weight
             rdr.mdl_data.vertices.append(current_vertex)
-                
-    # skeleton info
+    #skeleton info
     bone_count = rdr.read_num(UINT32)
+    #print("BONE COUNT: " + str(bone_count))
+    rdr.show_logs = True
     for i in range(bone_count):
         bone = Bone_Data()
         bone.name = rdr.read_str()
         bone.parent = rdr.read_num(SINT32)
-        transform = mathutils.Matrix.Identity(4)
-        x = rdr.read_num(FLOAT) * rdr.mdl_data.model_scale 
-        y = rdr.read_num(FLOAT) * rdr.mdl_data.model_scale 
+        transform = mathutils.Matrix.Identity(3)
+        x = rdr.read_num(FLOAT) * rdr.mdl_data.model_scale
+        y = rdr.read_num(FLOAT) * rdr.mdl_data.model_scale
         z = rdr.read_num(FLOAT) * rdr.mdl_data.model_scale
         position = mathutils.Vector( (x,y,z) )
         
@@ -90,9 +92,9 @@ def read_mesh_section(rdr):
         
         bone.pos = position
         #bone.local_pos = position.copy()
-        bone.transform = transform.to_4x4()
-        bone.transform.translation = position
-        bone.local_transform = bone.transform.copy()#.to_quaternion()
+        bone.transform = transform.transposed()
+        bone.local_transform = bone.transform.copy().to_4x4()#.to_quaternion()
+        bone.local_transform.translation = position
         #print(test_matrix)
         #print(test_pos_matrix)
         rdr.mdl_data.bones.append(bone)
