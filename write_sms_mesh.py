@@ -101,8 +101,12 @@ def write_mesh_section(wtr):
             wtr.write_num(len(groups)) #bone count
             for k in groups:
                 wtr.write_num(group_bones[k.group])
-                bone = bones[group_bones[k.group]]
-                vert_rel = bone.matrix.inverted() @ (vert.co - bone.tail_local)
+                current_bone = bones[group_bones[k.group]]
+                parent_tfm = mathutils.Matrix.Identity(3)
+                if current_bone.parent:
+                    bone_parent = bone_indices[current_bone.parent.name]
+                    parent_tfm = current_bone.parent.matrix_local.to_3x3() #bone_tfms[current_bone.parent.name]
+                vert_rel = (parent_tfm.inverted() @ ( vert.co - current_bone.tail_local))
                 wtr.write_num(vert_rel[0], FLOAT)
                 wtr.write_num(vert_rel[1], FLOAT)
                 wtr.write_num(vert_rel[2], FLOAT)
