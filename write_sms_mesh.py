@@ -111,7 +111,7 @@ def write_mesh_section(wtr):
                 wtr.write_num(vert_rel[1], FLOAT)
                 wtr.write_num(vert_rel[2], FLOAT)
                 blender_normal = vert.normal # the normal stored by blender
-                au, av = compress_normal(blender_normal[1], blender_normal[2], blender_normal[0])
+                au, av = compress_normal(blender_normal[0], blender_normal[1], blender_normal[2])
                 wtr.write_num(au, BYTE)
                 wtr.write_num(av, BYTE)
                 wtr.write_num(k.weight, FLOAT)

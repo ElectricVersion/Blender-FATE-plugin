@@ -151,14 +151,14 @@ def compress_normal(p_x, p_y, p_z):
     multiplier = (3.14159 / 255.0) * 2.0
     alpha = math.acos(p_y)
     AU = math.floor(alpha / multiplier)
-    beta = math.asin(p_z / math.sin(alpha))
+    beta = math.acos(p_x / math.sin(alpha))
     AV = math.floor(beta / multiplier)
     return AU, AV
 
 def decompress_normal(AU, AV):
-    multiplier = 3.14159 / 255.0 # convert from 0-255 to radians
-    alpha = AU * 2.0 * multiplier
-    beta = AV * 2.0 * multiplier
+    multiplier = (3.14159 / 255.0) * 2.0 # convert from 0-255 to radians
+    alpha = AU * multiplier
+    beta = AV * multiplier
     x = math.cos(beta) * math.sin(alpha)
     y = math.cos(alpha)
     z = math.sin(beta) * math.sin(alpha)
