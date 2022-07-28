@@ -1,6 +1,6 @@
 from .util import *
-import mathutils
-
+from mathutils import *
+#import mathutils
 
 def write_basic_info(wtr):
     wtr.write_str("V2.0")
@@ -34,7 +34,6 @@ def write_basic_info(wtr):
 
 def write_mesh_section(wtr):
     for i in range(1): # change later to be the number of objects
-        mesh_offset = len(wtr.txt_data)
         mesh_object = wtr.mdl_data.active_mesh
         vertices = list(mesh_object.vertices)
         faces = list(mesh_object.polygons)
@@ -79,57 +78,54 @@ def write_mesh_section(wtr):
             wtr.write_num(uvs[j][1], FLOAT)
         
         #start vertex list
-        header_vert_start = len(wtr.txt_data)
+        header_vertex_start = len(wtr.txt_data)
         
         real_verts = mesh_object.vertices.values()
         
         armature = wtr.mdl_data.active_object.find_armature().data
-        bones = armature.bones
-        bones_dict = {v.name:v for v in bones}
+        bones = list(armature.bones)
+        #angle_correction = Matrix(((0,-1,0), (1,0,0), (0,0,1)))
         
         #first find every index
         bone_indices = {}
-        for j in bones:
-            bone_indices[j.name] = bone_export_order.index(j.name)
-        print(bone_indices)
-        sorted_bones = {v:k for (k,v) in bone_indices.items()}
+        for j in range(len(bones)):
+            current_bone = bones[j]
+            bone_indices[current_bone.name] = j
         #sort vertex groups
         vertex_groups = list(wtr.mdl_data.active_object.vertex_groups)
         group_bones = {}
         for j in vertex_groups:
-            group_bones[j.index] = j.name
+            group_bones[j.index] = bone_indices[j.name]
         for j in vertices:
             vert = real_verts[j.index]
             groups = list(vert.groups)
             wtr.write_num(len(groups)) #bone count
             for k in groups:
-                current_bone = bones_dict[group_bones[k.group]]
-                wtr.write_num(bone_indices[group_bones[k.group]])
-                #wtr.write_num(bone_indices[current_bone.name])
+                wtr.write_num(group_bones[k.group])
+                current_bone = bones[group_bones[k.group]]
                 parent_tfm = mathutils.Matrix.Identity(3)
                 if current_bone.parent:
                     bone_parent = bone_indices[current_bone.parent.name]
-                    #parent_tfm = bone_tfms[current_bone.parent.name]
-                #vert_rel = (parent_tfm.inverted() @ ( vert.co - current_bone.tail_local))
-                vert_rel = (vert.co-current_bone.head_local)# * (k.weight)
+                    parent_tfm = current_bone.parent.matrix_local.to_3x3() #bone_tfms[current_bone.parent.name]
+                vert_rel = (parent_tfm.inverted() @ ( vert.co - current_bone.tail_local))
                 wtr.write_num(vert_rel[0], FLOAT)
                 wtr.write_num(vert_rel[1], FLOAT)
                 wtr.write_num(vert_rel[2], FLOAT)
-                blender_normal = vert.normal.normalized() # the normal stored by blender
+                blender_normal = vert.normal # the normal stored by blender
                 au, av = compress_normal(blender_normal[0], blender_normal[1], blender_normal[2])
                 wtr.write_num(au, BYTE)
                 wtr.write_num(av, BYTE)
                 wtr.write_num(k.weight, FLOAT)
-        
         # skeleton time!
         
         wtr.write_num(len(bones))
         #now write the info
-        for j in range(len(sorted_bones)):
-            current_bone = bones[sorted_bones[j]]
+        for j in range(len(bones)):
+            current_bone = bones[j]
             bone_name = current_bone.name
             bone_parent = -1
-            parent_tfm = mathutils.Matrix.Identity(3)
+            parent_tfm = Matrix.Identity(3)
+            parent_tail = Vector((0,0,0))
             if current_bone.parent:
                 bone_parent = bone_indices[current_bone.parent.name]
                 parent_tfm = current_bone.parent.matrix #bone_tfms[current_bone.parent.name]
@@ -153,9 +149,9 @@ def write_mesh_section(wtr):
                     print(matrix_col)
                     wtr.write_num((round(matrix_col*32767)), SINT16)
         
-        wtr.seek(ptr_header_tri_start)
-        wtr.write_num(header_tri_start-mesh_offset)
-        wtr.seek(ptr_header_uv_start)
-        wtr.write_num(header_uv_start-mesh_offset)
-        wtr.seek(ptr_header_vert_start)
-        wtr.write_num(header_vert_start-mesh_offset)
+    wtr.seek(ptr_header_tri_start)
+    wtr.write_num(header_tri_start)
+    wtr.seek(ptr_header_uv_start)
+    wtr.write_num(header_uv_start)
+    wtr.seek(ptr_header_vert_start)
+    wtr.write_num(header_vertex_start)

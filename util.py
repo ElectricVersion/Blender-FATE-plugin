@@ -147,11 +147,18 @@ class Writer:
         self.write(list(output))
         print("Wrote string: " + str(output) + " of length", len(output))
         
+def clamp(p_num, p_min=-1.0, p_max=1.0):
+    if p_num <= p_min:
+        return p_min
+    elif p_num >= p_max:
+        return p_max
+    return p_num
+
 def compress_normal(p_x, p_y, p_z):
     multiplier = (3.14159 / 255.0) * 2.0
     alpha = math.acos(p_y)
     AU = math.floor(alpha / multiplier)
-    beta = math.acos(p_x / math.sin(alpha))
+    beta = math.acos(clamp(p_x / math.sin(alpha)))
     AV = math.floor(beta / multiplier)
     return AU, AV
 
@@ -181,10 +188,32 @@ def get_axis(p_vector):
     axis = vec.index(max(vec))
     return axis
 
+bone_export_order = [
+    "malePlayer01_Root Spine2",
+    "malePlayer01 R UpperArm",
+    "malePlayer01 Spine1",
+    "malePlayer01 R ForeArm",
+    "malePlayer01 R Hand",
+    "malePlayer01 Pelvis",
+    "malePlayer01 Spine",
+    "malePlayer01 R Thigh",
+    "malePlayer01 R Clavicle",
+    "malePlayer01 L Thigh",
+    "malePlayer01 L UpperArm",
+    "malePlayer01 Neck",
+    "malePlayer01 L Clavicle",
+    "malePlayer01 Head",
+    "malePlayer01 L ForeArm",
+    "malePlayer01 L Hand",
+    "malePlayer01_Root"
+]
+
 #def convert_matrix(p_matrix):
-#    mat_list = [[col for col in row] for row in p_matrix.row]
-#    mat_list[0:2] = mat_list[1::-1]
-#    return mathutils.Matrix(mat_list)
+#    mat_copy = p_matrix.copy()
+#    mat_copy[2] *= -1
+#    #for i in range(len(mat_copy)):
+#    #    mat_copy[i][i] *= -1
+#    return mat_copy
     
 
 ##this class is meant to allow for easy conversions between two

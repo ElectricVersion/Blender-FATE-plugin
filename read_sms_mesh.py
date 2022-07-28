@@ -11,7 +11,7 @@ def read_basic_info(rdr):
     rdr.mdl_data.texture_count = rdr.read_num(UINT32)
     
 def read_mesh_section(rdr):
-    rdr.show_logs = False
+    rdr.show_logs = True
     for i in range(rdr.mdl_data.tag_count):
         rdr.mdl_data.tag_names.append(rdr.read_str())
         if rdr.mdl_data.version == "V2.0\0":
@@ -47,10 +47,12 @@ def read_mesh_section(rdr):
             #print("BONE COUNT" + str(bone_count))
             for k in range(bone_count):
                 bone_index = rdr.read_num(UINT32)
+                print("BONE_INDEX:", bone_index)
                 #print(bone_index)
                 x = rdr.read_num(FLOAT) * rdr.mdl_data.model_scale
                 y = rdr.read_num(FLOAT) * rdr.mdl_data.model_scale
                 z = rdr.read_num(FLOAT) * rdr.mdl_data.model_scale
+                print("VERTEX_OFFSET:", (x,y,z))
                 au = rdr.read_num(BYTE)
                 av = rdr.read_num(BYTE)
                 weight = rdr.read_num(FLOAT)
@@ -89,11 +91,12 @@ def read_mesh_section(rdr):
         #transform[3][0] = x
         #transform[3][1] = y
         #transform[3][2] = z
-        
+        print("TRANSFORM:", transform)
+        transform = transform.transposed()
         bone.pos = position
         #bone.local_pos = position.copy()
-        bone.transform = transform.transposed()
-        bone.local_transform = bone.transform.copy().to_4x4()#.to_quaternion()
+        bone.transform = transform
+        bone.local_transform = transform.to_4x4()#.to_quaternion()
         bone.local_transform.translation = position
         #print(test_matrix)
         #print(test_pos_matrix)

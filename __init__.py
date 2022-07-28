@@ -268,42 +268,27 @@ class Import_SMS(Operator, ImportHelper):
         for i in bone_order:
             v = bones[i]
             a_bone = armature_ebones[v.name]
-            #a_bone.head = v.pos
             a_bone.length = 1.0
-            #print(a_bone.use_relative_parent)
-            #a_bone.matrix = v.transform
-            #print(a_bone.use_relative_parent)
-            #a_bone.translate(v.local_pos)
-            tfm_loc = v.local_transform# @ mathutils.Matrix.Scale(-1, 4)
             tfm = v.transform.copy()
-            axis, roll = bpy.types.Bone.AxisRollFromMatrix(tfm)
-            #local_tfm = tfm.copy()
-            #tfm_loc = v.local_transform.to_3x3()
-            head_pos = mathutils.Vector((0,0,0))
-            parent_tfm = mathutils.Matrix.Identity(4)
+            tfm_loc = v.local_transform.copy()
+            #parent_tfm = mathutils.Matrix.Identity(4)
+            a_bone.head = mathutils.Vector((0,0,0))
+            a_bone.tail = mathutils.Vector((0,0.5,0))
             if v.parent > -1:
                 parent = bones[v.parent]
-                parent_tfm = parent.local_transform
-                #parent_tfm = bpy.types.Bone.MatrixFromAxisRoll(parent.tail - parent.head, parent.roll)
-                #parent_tfm = mathutils.Matrix.Rotation(math.pi/2, 3, parent.vector)
-                #v.local_transform = parent_tfm @ v.local_transform
-                #parent_tfm_local = parent_tfm.to_4x4()
-                #parent_tfm_local.translation = parent.head
-                #axis = parent_tfm @ axis
-                #head_pos = parent_tfm.translation.copy()
-                head_pos = a_bone.parent.tail
+                parent_tfm = parent.local_transform.copy()
+                a_parent = armature_ebones[parent.name]
                 tfm_loc = parent_tfm @ tfm_loc
-                v.local_transform = tfm_loc
-                #tfm.translation = v.pos
-            a_bone.head = head_pos
-            #a_bone.tail = mathutils.Matrix.LocRotScale(a_bone.head, axis, None) @ v.pos
-            a_bone.tail = (v.local_transform.translation)
-            if a_bone.length < 0.001:
-                a_bone.tail = tfm_loc @ mathutils.Vector(v.pos.normalized())
-            a_bone.roll = roll
-            #a_bone.tail = (tfm @ v.pos) + a_bone.head
+                v.local_transform = tfm_loc.copy()
+                a_bone.head = tfm_loc.translation
+                a_bone.length = 1.0
+            #a_bone.length = v.pos.length
             print(v.name, a_bone.head)
-            print("MATRIX", v.name, tfm_loc)        
+        #for i in bone_order:
+        #    v = bones[i]
+        #    a_bone = armature_ebones[v.name]
+        #    if a_bone.length < 0.001:
+        #        a_bone.tail = tfm_loc @ mathutils.Vector(v.pos.normalized())
         #for i in bone_order:
         #    v = bones[i]
         #    a_bone = armature_ebones[v.name]
@@ -341,7 +326,7 @@ class Import_SMS(Operator, ImportHelper):
                 bone_weight = reader.mdl_data.vertices[i].bone_weights[j]
                 bone_name = reader.mdl_data.bones[j].name
                 #print(bone_name)
-                bone_pos_local = reader.mdl_data.bones[j].local_pos
+                #bone_pos_local = reader.mdl_data.bones[j].local_pos
                 bone_tfm_local = reader.mdl_data.bones[j].local_transform
                 #print(bone_tfm_local)
                 bone_offset =  mathutils.Vector(reader.mdl_data.vertices[i].bone_offsets[j])
